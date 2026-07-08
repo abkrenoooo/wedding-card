@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSVP Responses - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            min-width: 150px;
+        }
+
+        .stat-box.yes {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .stat-box.no {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .responses-list {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .response-card {
+            background: #f8f9fa;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border-right: 4px solid #667eea;
+        }
+
+        .response-card.attending {
+            border-right-color: #4CAF50;
+        }
+
+        .response-card.not-attending {
+            border-right-color: #f44336;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .response-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .response-attendance {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .response-attendance.yes {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .response-attendance.no {
+            background: #f44336;
+            color: white;
+        }
+
+        .response-message {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .response-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .delete-btn:hover {
+            background: #da190b;
+        }
+
+        .export-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .export-btn:hover {
+            background: #1976D2;
+        }
+
+        .no-responses {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+
+        .no-responses i {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .export-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-heart"></i> Wedding RSVP Responses</h1>
+            <p>شريف & هالة - 15 أغسطس 2026</p>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalResponses">0</div>
+                    <div class="stat-label">Total Responses</div>
+                </div>
+                <div class="stat-box yes">
+                    <div class="stat-number" id="yesCount">0</div>
+                    <div class="stat-label">Attending (Yes)</div>
+                </div>
+                <div class="stat-box no">
+                    <div class="stat-number" id="noCount">0</div>
+                    <div class="stat-label">Not Attending (No)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="responses-list" id="responsesList">
+            <!-- Responses will be loaded here -->
+        </div>
+
+        <button class="export-btn" onclick="exportToCSV()">
+            <i class="fas fa-download"></i>
+            Export to CSV
+        </button>
+    </div>
+
+    <script>
+        // Load responses on page load
+        document.addEventListener('DOMContentLoaded', loadResponses);
+
+        function loadResponses() {
+            const responses = JSON.parse(localStorage.getItem('weddingRSVP') || '[]');
+            const container = document.getElementById('responsesList');
+            
+            if (responses.length === 0) {
+                container.innerHTML = `
+                    <div class="no-responses">
+                        <i class="fas fa-inbox"></i>
+                        <h2>No responses yet</h2>
+                        <p>Responses will appear here when guests submit the form</p>
+                    </div>
+                `;
+                updateStats(responses);
+                return;
+            }
+
+            // Sort by date (newest first)
+            responses.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            container.innerHTML = responses.map(response => `
+                <div class="response-card ${response.attendance === 'yes' ? 'attending' : 'not-attending'}">
+                    <div class="response-header">
+                        <div class="response-name">${escapeHtml(response.name)}</div>
+                        <div class="response-attendance ${response.attendance}">
+                            ${response.attendance === 'yes' ? '✓ YES' : '✗ NO'}
+                        </div>
+                    </div>
+                    <div class="response-message">
+                        ${escapeHtml(response.message)}
+                    </div>
+                    <div class="response-date">
+                        <i class="far fa-clock"></i> 
+                        ${new Date(response.date).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
+                    </div>
+                    <button class="delete-btn" onclick="deleteResponse(${response.id})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            `).join('');
+
+            updateStats(responses);
+        }
+
+        function updateStats(responses) {
+            const total = responses.length;
+            const yes = responses.filter(r => r.attendance === 'yes').length;
+            const no = responses.filter(r => r.attendance === 'no').length;
+
+            document.getElementById('totalResponses').textContent = total;
+            document.getElementById('yesCount').textContent = yes;
+            document.getElementById('noCount').textContent = no;
+        }
+
+        function deleteResponse(id) {
+            if (!confirm('Are you sure you want to delete this response?')) return;
+
+            let responses = JSON.parse(localStorage.getItem('weddingRSVP') || '[]');
+            responses = responses.filter(r => r.id !== id);
+            localStorage.setItem('weddingRSVP', JSON.stringify(responses));
+            loadResponses();
+        }
+
+        function exportToCSV() {
+            const responses = JSON.parse(localStorage.getItem('weddingRSVP') || '[]');
+            
+            if (responses.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            let csv = 'Name,Message,Attendance,Date\n';
+            responses.forEach(r => {
+                csv += `"${r.name}","${r.message.replace(/"/g, '""')}",${r.attendance},${r.date}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `wedding-rsvp-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
